@@ -29,6 +29,7 @@ import type { AgentContext } from "../injection/types.js";
 import { resolveFixedAssetCtxs, type FixedAssetCtx } from "../injection/injectors/tdai-fixed-asset.js";
 import type { TdaiIdentity } from "../tdai/types.js";
 import { emitBridgeToolCallTelemetry, agentSourceFromSessionKey } from "./bridge-telemetry.js";
+import { observeToolRequest } from "./tool-observation.js";
 
 const TAG = "[memory-bridge]";
 
@@ -282,6 +283,8 @@ export function createMemoryBridgeHandler(
       ?? config.coreSkill?.serviceId
       ?? "";
     const bindingRepo = getSessionStore().getBindingRepo() ?? null;
+    // 记录进入 Bridge 的调用，不按查询多个记忆来源的后端请求数重复计数。
+    observeToolRequest(config, { sessionId: sessionKey, family: "memory", subpath: sub });
 
     let ids = loadSessionIdsL1(sessionKey);
     if (!ids && bindingRepo && spaceId) {

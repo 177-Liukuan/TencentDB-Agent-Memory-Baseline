@@ -1,6 +1,7 @@
 /** Hono app factory — registers all routes. */
 
 import { Hono } from "hono";
+import { toolObservationStatus } from "./memory/tool-observation.js";
 import { handleChatCompletions } from "./handler.js";
 import { handleAnthropicMessages } from "./anthropicHandler.js";
 import { handleAuxiliaryEndpoint } from "./auxiliaryHandler.js";
@@ -17,6 +18,7 @@ import { getEffectiveBackend } from "./storage/factory.js";
 import type { ProxyConfig } from "./types.js";
 
 export function createApp(config: ProxyConfig): Hono {
+  toolObservationStatus(config);
   const app = new Hono();
 
   // Eagerly activate storage/bindingRepo so bridge-only requests (no main
@@ -88,6 +90,7 @@ export function createApp(config: ProxyConfig): Hono {
     const body = {
       status: degraded ? "degraded" : "ok",
       version: "0.2.0",
+      toolObservation: toolObservationStatus(config),
       upstream: config.upstream.url,
       opik: config.opik.enabled ? config.opik.url : "disabled",
       costGuard: config.costGuard.enabled ? "enabled" : "disabled",

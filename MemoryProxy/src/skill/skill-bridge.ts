@@ -33,6 +33,7 @@ import { getProxyStorage } from "../storage/factory.js";
 import { getMetadataClient } from "../meta/client.js";
 import type { ProxyConfig } from "../types.js";
 import { emitBridgeToolCallTelemetry, agentSourceFromSessionKey } from "../memory/bridge-telemetry.js";
+import { observeToolRequest } from "../memory/tool-observation.js";
 import { getCoreSkillClient, type CoreSkillClient } from "./core-client.js";
 
 /**
@@ -478,6 +479,9 @@ export function createSkillBridgeHandler(
       ?? config.tdai?.serviceId
       ?? config.coreSkill?.serviceId
       ?? "";
+
+    // 每次工具请求只记录一次；不等后端返回，也不把后续元数据查询算作工具调用。
+    observeToolRequest(config, { sessionId: sessionKey, family: "skill", subpath: sub });
 
     // Backing storage for extract trigger + version pin.
     // When storage.enabled + mode!=off → ProxyStorage (Kv* repos).
